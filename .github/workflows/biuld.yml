@@ -3,6 +3,7 @@ name: Build simple_live_console EXE
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:  # 支持网页手动点运行
 
 jobs:
   build-windows-exe:
@@ -14,19 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 安装Dart SDK
+      # 1. 安装Visual Studio构建工具，编译dart_quickjs的C代码必须
+      - name: Install MSVC Build Tools
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # 2. 安装Dart SDK
       - uses: dart-lang/setup-dart@v1
 
-      - name: 获取依赖
+      - name: dart pub get
         run: dart pub get
 
-      # 编译独立exe
-      - name: Compile to exe
-        run: dart compile exe bin/simple_live_console.dart -o simple_live_console.exe
+      # ✅ 使用 dart build cli，替代旧 dart compile exe
+      - name: Build native cli exe
+        run: dart build cli bin/simple_live_console.dart --output simple_live_console.exe
 
-      # 上传exe作为制品，运行完Actions后可以下载
-      - name: Upload exe artifact
+      # 打包产物：dart build会生成一个文件夹，里面包含exe+必须的dll，不能只单独上传exe！
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: simple_live_console-windows-exe
-          path: simple_live_console/simple_live_console.exe
+          name: simple_live_console-windows
+          path: simple_live_console/build/cli/
