@@ -1,0 +1,32 @@
+name: Build simple_live_console EXE
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: simple_live_console
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 安装Dart SDK
+      - uses: dart-lang/setup-dart@v1
+
+      - name: 获取依赖
+        run: dart pub get
+
+      # 编译独立exe
+      - name: Compile to exe
+        run: dart compile exe bin/simple_live_console.dart -o simple_live_console.exe
+
+      # 上传exe作为制品，运行完Actions后可以下载
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple_live_console-windows-exe
+          path: simple_live_console/simple_live_console.exe
