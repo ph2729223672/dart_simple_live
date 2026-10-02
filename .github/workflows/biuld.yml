@@ -1,33 +1,36 @@
-name: Build Dart to EXE
+name: Build Simple Live App
 
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # 允许你在网页上手动点击运行
+  workflow_dispatch: # 允许网页手动点击运行
 
 jobs:
   build:
-    runs-on: windows-latest # 使用 Windows 环境来编译 exe 最稳妥
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@v1
+      # 安装 Flutter 环境（该项目是 Flutter 跨平台项目）
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
         with:
-          sdk: 'stable'
+          flutter-version: '3.x' # 使用最新的 stable 3.x 版本
+          channel: 'stable'
+          cache: true
 
-      - name: Install dependencies
-        run: dart pub get
+      # 进入 simple_live_app 目录并编译 Windows 桌面端
+      - name: Build Windows App
+        run: |
+          cd simple_live_app
+          flutter pub get
+          flutter build windows --release
 
-      - name: Build EXE
-        # 请根据项目里实际的主程序入口文件路径修改，比如 bin/main.dart 或 lib/main.dart
-        # 如果项目根目录有 pubspec.yaml 并且通过 bin/ 运行，请看下一步说明
-        run: dart compile exe bin/main.dart -o dart_simple_live.exe
-
+      # 打包编译好的产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: dart_simple_live.exe
+          name: simple-live-windows-exe
+          path: simple_live_app/build/windows/x64/runner/Release/
